@@ -128,7 +128,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="helper.cpp" />
-    <ClCompile Include="userinput.cpp" />
+    <ClCompile Include="main.cpp" />
     <ClCompile Include="ShaderProgram.cpp" />
     <ClCompile Include="sprite.cpp" />
   </ItemGroup>
