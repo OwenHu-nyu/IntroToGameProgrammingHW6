@@ -2,8 +2,8 @@
 //  sprite.hpp
 //  SDLProject
 //
-//  Created by Sebastián Romero Cruz on 6/16/22.
-//  Copyright © 2022 ctg. All rights reserved.
+//  Created by SebastiÃ¡n Romero Cruz on 6/16/22.
+//  Copyright Â© 2022 ctg. All rights reserved.
 //
 
 #ifndef sprite_hpp

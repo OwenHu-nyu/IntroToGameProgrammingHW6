@@ -1,7 +1,11 @@
-#define GL_GLEXT_PROTOTYPES 1
-#define GL_SILENCE_DEPRECATION
-#define STB_IMAGE_IMPLEMENTATION
 #define LOG(argument) std::cout << argument << '\n'
+#define STB_IMAGE_IMPLEMENTATION
+#define GL_SILENCE_DEPRECATION
+#define GL_GLEXT_PROTOTYPES 1
+#define NUMBER_OF_ENEMIES 3
+#define FIXED_TIMESTEP 0.0166666f
+#define ACC_OF_GRAVITY -9.81f
+#define PLATFORM_COUNT 3
 
 #ifdef _WINDOWS
 #include <GL/glew.h>
@@ -13,80 +17,61 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "ShaderProgram.h"
 #include "stb_image.h"
+#include "cmath"
+#include <ctime>
+#include <vector>
+#include "Entity.h"
 
-// —— NEW STUFF —— //
-#include <ctime>   //
-#include "cmath"   //
-// ——————————————— //
+// â€”â€”â€”â€”â€” STRUCTS AND ENUMS â€”â€”â€”â€”â€”//
+struct GameState
+{
+    Entity* player;
+    Entity* platforms;
+    Entity* winmsg;
+    Entity* losemsg;
+};
 
-const int WINDOW_WIDTH = 640,
-WINDOW_HEIGHT = 480;
-
+// â€”â€”â€”â€”â€” CONSTANTS â€”â€”â€”â€”â€” //
+const int WINDOW_WIDTH = 1280,
+WINDOW_HEIGHT = 720;
 
 const float BG_RED = 0.1922f,
-BG_BLUE = 0.549f,
-BG_GREEN = 0.9059f,
-BG_OPACITY = 1.0f;
+            BG_BLUE = 0.549f,
+            BG_GREEN = 0.9059f,
+            BG_OPACITY = 1.0f;
 
 const int VIEWPORT_X = 0,
-VIEWPORT_Y = 0,
-VIEWPORT_WIDTH = WINDOW_WIDTH,
-VIEWPORT_HEIGHT = WINDOW_HEIGHT;
+          VIEWPORT_Y = 0,
+          VIEWPORT_WIDTH = WINDOW_WIDTH,
+          VIEWPORT_HEIGHT = WINDOW_HEIGHT;
 
-const char  V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
-F_SHADER_PATH[] = "shaders/fragment_textured.glsl",
-PLAYER_SPRITE_FILEPATH[] = "paddle.png",
-BALL_SPRITE_FILEPATH[] = "ball.png",
-PIKACHU_WIN_FILEPATH[] = "ball.png",
-ROCKET_WIN_FILEPATH[] = "paddle.png";
+const char V_SHADER_PATH[] = "shaders/vertex_textured.glsl",
+           F_SHADER_PATH[] = "shaders/fragment_textured.glsl";
 
 const float MILLISECONDS_IN_SECOND = 1000.0;
-const float MINIMUM_COLLISION_DISTANCE = 0.5f;
+const char  SPRITESHEET_FILEPATH[] = "spaceshipsprite.png",
+            PLATFORM_FILEPATH[]    = "moonsurface.png",
+            WIN_FILEPATH[] = "youwin.png",
+            LOSE_FILEPATH[] = "nahidwin.png";
 
-const int   NUMBER_OF_TEXTURES = 1;
-const GLint LEVEL_OF_DETAIL = 0;
-const GLint TEXTURE_BORDER = 0;
+const int NUMBER_OF_TEXTURES = 1;  // to be generated, that is
+const GLint LEVEL_OF_DETAIL  = 0;  // base image level; Level n is the nth mipmap reduction image
+const GLint TEXTURE_BORDER   = 0;  // this value MUST be zero
+
+// â€”â€”â€”â€”â€”Â VARIABLES â€”â€”â€”â€”â€” //
+GameState g_game_state;
 
 SDL_Window* g_display_window;
-bool  g_game_is_running = true;
-float g_previous_ticks = 0.0f;
+bool g_game_is_running = true;
 
 ShaderProgram g_shader_program;
-glm::mat4     g_view_matrix,
-g_model_matrix,
-g_projection_matrix,
-g_other_model_matrix,
-g_ball_matrix,
-g_pika_win_matrix,
-g_rocket_win_matrix;
+glm::mat4 g_view_matrix, g_projection_matrix;
 
-GLuint g_player_texture_id,
-g_other_texture_id,
-g_ball_texture_id,
-g_pika_win_texture_id,
-g_rocket_win_texture_id;
+float g_previous_ticks = 0.0f;
+float g_time_accumulator = 0.0f;
 
-glm::vec3 g_player_position = glm::vec3(-4.5f, 0.0f, 0.0f);
-glm::vec3 g_player_movement = glm::vec3(0.0f, 0.0f, 0.0f);
-
-glm::vec3 g_other_position = glm::vec3(4.5f, 0.0f, 0.0f);
-glm::vec3 g_other_movement = glm::vec3(0.0f, 0.0f, 0.0f);
-
-glm::vec3 g_ball_position = glm::vec3(0.0f, 0.0f, 0.0f);
-glm::vec3 g_ball_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
-
-glm::vec3 g_pika_position = glm::vec3(0.0f);
-glm::vec3 g_rocket_position = glm::vec3(0.0f);
-
-bool IsSingleplayer = false;
-bool GameOver = false;
-std::string winner;
-
-float g_player_speed = 1.5f;
-float ball_speed = 1.75f;
-//glm::vec3 g_ball_position = glm::vec3(WINDOW_WIDTH / 2, WINDOW_HEIGHT / 2, 0);
-//glm::vec3 g_ball_direction = glm::vec3(-1, 0, 0);
-
+const int GRAVITY_VALUE = 3.0f;
+// â€”â€”â€”â€” GENERAL FUNCTIONS â€”â€”â€”â€” //
 GLuint load_texture(const char* filepath)
 {
     int width, height, number_of_components;
@@ -106,16 +91,18 @@ GLuint load_texture(const char* filepath)
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
 
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+
     stbi_image_free(image);
 
     return textureID;
 }
 
-
 void initialise()
 {
     SDL_Init(SDL_INIT_VIDEO);
-    g_display_window = SDL_CreateWindow("Hello, Collisions!",
+    g_display_window = SDL_CreateWindow("Hello, Entities!",
         SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED,
         WINDOW_WIDTH, WINDOW_HEIGHT,
         SDL_WINDOW_OPENGL);
@@ -131,56 +118,78 @@ void initialise()
 
     g_shader_program.load(V_SHADER_PATH, F_SHADER_PATH);
 
-    g_model_matrix = glm::mat4(1.0f);
-
-    g_other_model_matrix = glm::mat4(1.0f);
-    g_other_model_matrix = glm::translate(g_other_model_matrix, glm::vec3(4.5f, 0.0f, 0.0f));
-    g_other_position += g_other_movement;
-
-    g_view_matrix = glm::mat4(1.0f);
+    g_view_matrix       = glm::mat4(1.0f);
     g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);
-
-    g_player_texture_id = load_texture(PLAYER_SPRITE_FILEPATH);
-    g_other_texture_id = load_texture(PLAYER_SPRITE_FILEPATH);
-    g_ball_texture_id = load_texture(BALL_SPRITE_FILEPATH);
-    g_pika_win_texture_id = load_texture(PIKACHU_WIN_FILEPATH);
-    g_rocket_win_texture_id = load_texture(ROCKET_WIN_FILEPATH);
 
     g_shader_program.set_projection_matrix(g_projection_matrix);
     g_shader_program.set_view_matrix(g_view_matrix);
 
     glUseProgram(g_shader_program.get_program_id());
+
     glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
 
+    // â€”â€”â€”â€”â€” PLAYER â€”â€”â€”â€”â€” //
+    g_game_state.player = new Entity();
+    g_game_state.player->set_position(glm::vec3(-3.5f, 2.5f, 0.0f));
+    g_game_state.player->set_movement(glm::vec3(0.25f, 0.0f, 0.0f));
+    g_game_state.player->set_acceleration(glm::vec3(0.0f, ACC_OF_GRAVITY * 0.1, 0.0f));
+    g_game_state.player->set_speed(1.0f);
+    g_game_state.player->m_texture_id = load_texture(SPRITESHEET_FILEPATH);
+
+    g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->RIGHT];  // start George looking right
+    g_game_state.player->m_animation_frames = 4;
+    g_game_state.player->m_animation_index = 0;
+    g_game_state.player->m_animation_time = 0.0f;
+    g_game_state.player->m_animation_cols = 4;
+    g_game_state.player->m_animation_rows = 4;
+
+    // â€”â€”â€”â€”â€” PLATFORM â€”â€”â€”â€”â€” //
+    g_game_state.platforms = new Entity[PLATFORM_COUNT];
+
+    for (int i = 0; i < PLATFORM_COUNT; i++)
+    {
+        g_game_state.platforms[i].m_texture_id = load_texture(PLATFORM_FILEPATH);
+        g_game_state.platforms[i].set_position(glm::vec3(i - 1.0f, -3.0f, 0.0f));
+        g_game_state.platforms[i].update(0.0f, NULL, 0);
+    }
+
+    g_game_state.winmsg = new Entity();
+    g_game_state.winmsg->set_position(glm::vec3(0.0f));
+    g_game_state.winmsg->m_texture_id = load_texture(WIN_FILEPATH);
+
+    g_game_state.losemsg = new Entity();
+    g_game_state.losemsg->set_position(glm::vec3(0.0f));
+    g_game_state.losemsg->m_texture_id = load_texture(LOSE_FILEPATH);
+    // â€”â€”â€”â€”â€” PLAYER FALLS WITH GRAVITY â€”â€”â€”â€”â€” //
+    g_game_state.player->set_acceleration(glm::vec3(0.0f, -GRAVITY_VALUE * 0.1f, 0.0f));
+    // â€”â€”â€”â€”â€” GENERAL â€”â€”â€”â€”â€” //
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 }
 
-void draw_object(glm::mat4& object_model_matrix, GLuint& object_texture_id)
-{
-    g_shader_program.set_model_matrix(object_model_matrix);
-    glBindTexture(GL_TEXTURE_2D, object_texture_id);
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-}
 
 void process_input()
 {
-    g_player_movement = glm::vec3(0.0f);
-    g_other_movement = glm::vec3(0.0f);
+    // VERY IMPORTANT: If nothing is pressed, we don't want to go anywhere
+    //if (!g_game_state.player->get_isKeyPressed()) {
+        //glm::vec3 current_acceleration = g_game_state.player->get_acceleration();
+       // current_acceleration += glm::vec3(0.0f, -GRAVITY_VALUE * 0.1f, 0.0f) * g_game_state.player;
+        //g_game_state.player->set_acceleration(current_acceleration);
+    //}
     SDL_Event event;
     while (SDL_PollEvent(&event))
     {
-        switch (event.type)
-        {
+        switch (event.type) {
+            // End game
         case SDL_QUIT:
         case SDL_WINDOWEVENT_CLOSE:
             g_game_is_running = false;
             break;
 
         case SDL_KEYDOWN:
-            switch (event.key.keysym.sym)
-            {
+            switch (event.key.keysym.sym) {
             case SDLK_q:
+                // Quit the game with a keystroke
                 g_game_is_running = false;
                 break;
 
@@ -194,144 +203,85 @@ void process_input()
     }
 
     const Uint8* key_state = SDL_GetKeyboardState(NULL);
+    bool isKeyPressed = false;
 
-    if (key_state[SDL_SCANCODE_W])
+    if (key_state[SDL_SCANCODE_LEFT])
     {
-        g_player_movement.y = 1.0f;
+        g_game_state.player->rotate_left();
+        //g_game_state.player->set_isKeyPressed(true);
+        //g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->LEFT];
     }
-    else if (key_state[SDL_SCANCODE_S])
+    else if (key_state[SDL_SCANCODE_RIGHT])
     {
-        g_player_movement.y = -1.0f;
+        g_game_state.player->rotate_right();
+        //g_game_state.player->set_isKeyPressed(true);
+        //g_game_state.player->m_animation_indices = g_game_state.player->m_walking[g_game_state.player->RIGHT];
     }
-    if (key_state[SDL_SCANCODE_T]) {
-        IsSingleplayer = !IsSingleplayer;
+    if (key_state[SDL_SCANCODE_UP]) {
+        g_game_state.player->accelerate_up();
+        isKeyPressed = true;
+        //g_game_state.player->set_isKeyPressed(true);
     }
-    if (!IsSingleplayer) {
-        std::cout << std::time(nullptr) << ": Multiplayer.\n";
-        if (key_state[SDL_SCANCODE_UP])
-        {
-            g_other_movement.y = 1.0f;
-        }
-        else if (key_state[SDL_SCANCODE_DOWN])
-        {
-            g_other_movement.y = -1.0f;
-        }
+    if (!isKeyPressed) {
+        glm::vec3 current_acceleration = g_game_state.player->get_acceleration();
+        current_acceleration.y = ACC_OF_GRAVITY * 0.05f;
+        g_game_state.player->set_acceleration(current_acceleration);
     }
-    if (glm::length(g_player_movement) > 1.0f)
+    // This makes sure that the player can't move faster diagonally
+    if (glm::length(g_game_state.player->get_movement()) > 1.0f)
     {
-        g_player_movement = glm::normalize(g_player_movement);
-    }
-    if (glm::length(g_other_movement) > 1.0f)
-    {
-        g_other_movement = glm::normalize(g_player_movement);
-    }
-    if (glm::length(g_ball_movement) > 1.0f) {
-        g_ball_movement = glm::normalize(g_ball_movement);
+        g_game_state.player->set_movement(glm::normalize(g_game_state.player->get_movement()));
     }
 }
-
-
-// ————————————————————————— NEW STUFF ———————————————————————————— //
-bool check_collision(glm::vec3& player_position, glm::vec3& ball_position)  //
-{                                                                   //
-    // —————————————————  Distance Formula ———————————————————————— //
-    float x_distance = fabs(player_position.x - ball_position.x) - 0.5f;
-    float y_distance = fabs(player_position.y - ball_position.y) - 0.5f;
-    return (x_distance < 0 && y_distance < 0);
-}
-// ———————————————————————————————————————————————————————————————— //
-
 
 void update()
 {
-    float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
-    float delta_time = ticks - g_previous_ticks;
+    // â€”â€”â€”â€”â€” DELTA TIME â€”â€”â€”â€”â€” //
+    float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND; // get the current number of ticks
+    float delta_time = ticks - g_previous_ticks; // the delta time is the difference from the last frame
     g_previous_ticks = ticks;
-    if (!GameOver) {
-        g_model_matrix = glm::mat4(1.0f);
-        g_other_model_matrix = glm::mat4(1.0f);
-        g_ball_matrix = glm::mat4(1.0f);
-        g_player_position += g_player_movement * g_player_speed * delta_time;
-        g_ball_position += g_ball_movement * ball_speed * delta_time;
-        if (IsSingleplayer) {
-            std::cout << std::time(nullptr) << ": Singleplayer.\n";
-            g_other_position.y = sin(ticks) * 2;
-        }
-        else {
-            g_other_position += g_other_movement * g_player_speed * delta_time;
-        }
-        g_model_matrix = glm::translate(g_model_matrix, g_player_position);
-        g_other_model_matrix = glm::translate(g_other_model_matrix, g_other_position);
-        g_ball_matrix = glm::translate(g_ball_matrix, g_ball_position);
-        //std::cout << std::time(nullptr) << ": Collision.\n";
-        if (g_ball_position.y <= -3.5 || g_ball_position.y >= 3.5) {
-            g_ball_movement.y *= -1;
-        }
-        // —————————————————————— NEW STUFF ——————————————————————— //
-        if (check_collision(g_player_position, g_ball_position) || check_collision(g_ball_position, g_other_position))   //
-        {                                                           //
-            g_ball_movement.x *= -1;    //
-            g_ball_movement.y = sin(ticks) * 0.75;
-        }
-        if (g_ball_position.x <= -4.775f) {
-            GameOver = !GameOver;
-            winner = "Rocket";
 
-        }
-        else if (g_ball_position.x >= 4.775f) {
-            GameOver = !GameOver;
-            winner = "Pikachu";
-        }
-    }
-    else {
-        g_player_movement = glm::vec3(0.0f);
-        g_other_movement = glm::vec3(0.0f);
-        g_ball_movement = glm::vec3(0.0f);
-        if (winner == "Pikachu") {
-            draw_object(g_pika_win_matrix, g_pika_win_texture_id);
-        }
-        if (winner == "Rocket") {
-            draw_object(g_rocket_win_matrix, g_rocket_win_texture_id);
-        }
+    // â€”â€”â€”â€”â€” FIXED TIMESTEP â€”â€”â€”â€”â€” //
+    // STEP 1: Keep track of how much time has passed since last step
+    g_time_accumulator += delta_time;
+
+    // STEP 2: If we haven't hit the amount of time needed for one step, don't update anything
+    if (g_time_accumulator < FIXED_TIMESTEP) return;
+
+    // STEP 3: Once we exceed our fixed timestep, apply that elapsed time into the objects' update function invocation
+    while (g_time_accumulator >= FIXED_TIMESTEP)
+    {
+        // Notice that we're using FIXED_TIMESTEP as our delta time
+        g_game_state.player->update(FIXED_TIMESTEP, g_game_state.platforms, 3);
+        g_time_accumulator -= FIXED_TIMESTEP;
     }
 }
-
 
 void render()
 {
+    // â€”â€”â€”â€”â€” GENERAL â€”â€”â€”â€”â€” //
     glClear(GL_COLOR_BUFFER_BIT);
 
-    float vertices[] = {
-        -0.5f, -0.5f, 0.5f, -0.5f, 0.5f, 0.5f,
-        -0.5f, -0.5f, 0.5f, 0.5f, -0.5f, 0.5f
-    };
+    // â€”â€”â€”â€”â€” PLAYER â€”â€”â€”â€”â€” //
+    g_game_state.player->render(&g_shader_program);
 
-    float texture_coordinates[] = {
-        0.0f, 1.0f, 1.0f, 1.0f, 1.0f, 0.0f,
-        0.0f, 1.0f, 1.0f, 0.0f, 0.0f, 0.0f,
-    };
-
-    glVertexAttribPointer(g_shader_program.get_position_attribute(), 2, GL_FLOAT, false, 0, vertices);
-    glEnableVertexAttribArray(g_shader_program.get_position_attribute());
-
-    glVertexAttribPointer(g_shader_program.get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, texture_coordinates);
-    glEnableVertexAttribArray(g_shader_program.get_tex_coordinate_attribute());
-
-    glm::mat4 smol_ball_model_matrix = glm::scale(g_ball_matrix, glm::vec3(0.5f, 0.5f, 0.5f));
-    draw_object(g_model_matrix, g_player_texture_id);
-    draw_object(g_other_model_matrix, g_other_texture_id);
-    draw_object(smol_ball_model_matrix, g_ball_texture_id);
-
-    glDisableVertexAttribArray(g_shader_program.get_position_attribute());
-    glDisableVertexAttribArray(g_shader_program.get_tex_coordinate_attribute());
-
+    // â€”â€”â€”â€”â€” PLATFORM â€”â€”â€”â€”â€” //
+    for (int i = 0; i < PLATFORM_COUNT; i++) g_game_state.platforms[i].render(&g_shader_program);
+    if (g_game_state.player->get_GameOver()) {
+        if (g_game_state.player->get_Win()) {
+            g_game_state.winmsg->render(&g_shader_program);
+        }
+        else if (!g_game_state.player->get_Win()) {
+            g_game_state.losemsg->render(&g_shader_program);
+        }
+    }
+    // â€”â€”â€”â€”â€” GENERAL â€”â€”â€”â€”â€” //
     SDL_GL_SwapWindow(g_display_window);
 }
 
-
 void shutdown() { SDL_Quit(); }
 
-
+// â€”â€”â€”â€”â€”Â DRIVER GAME LOOP â€”â€”â€”â€”â€” /
 int main(int argc, char* argv[])
 {
     initialise();

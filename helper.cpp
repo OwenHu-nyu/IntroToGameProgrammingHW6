@@ -42,16 +42,16 @@ const char MAT_SEP = '\t';
  * @param matrix Reference to the matrix.
  * @param size The size of the matrix
  */
-void print_matrix(glm::mat4& matrix, int size)
+void print_matrix(glm::mat4 &matrix, int size)
 {
-    for (auto row = 0; row < size; row++)
+    for (auto row = 0 ; row < size ; row++)
     {
-        for (auto col = 0; col < size; col++)
+        for (auto col = 0 ; col < size ; col++)
         {
             // Print row
             std::cout << matrix[row][col] << MAT_SEP;
         }
-
+        
         // Visually "move on" to the next row
         std::cout << "\n";
     }
