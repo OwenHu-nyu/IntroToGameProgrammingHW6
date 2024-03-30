@@ -62,6 +62,8 @@ const char  BGM_FILEPATH[]          = "assets/audio/dooblydoo.mp3",
 
 const int   LOOP_FOREVER     = -1;  // -1 means loop forever in Mix_PlayMusic; 0 means play once and loop zero times
 
+int EnemyDead = 0;
+
 const int NUMBER_OF_TEXTURES = 1;
 const GLint LEVEL_OF_DETAIL  = 0;
 const GLint TEXTURE_BORDER   = 0;
@@ -222,7 +224,7 @@ void initialise()
 
     glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
 
-  
+    GLuint font_texture_id = load_texture(FONT_FILEPATH);
 
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
@@ -456,6 +458,7 @@ void process_input()
 
 void update()
 {
+    GLuint font_texture_id = load_texture(FONT_FILEPATH);
     float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
@@ -469,7 +472,7 @@ void update()
     }
 
     while (delta_time >= FIXED_TIMESTEP) {
-        int EnemyDead = 0;
+        
         for (int i = 0; i < ENEMY_COUNT; i++) {
             if (g_game_state.player->check_collision_x_player(&g_game_state.enemies[i])) {
                 g_game_state.player->setNotActive();
@@ -501,15 +504,6 @@ void update()
                 //g_game_state.player->check_collision_y(g_game_state.enemies, 3);
             }
         }
-        else {
-            if (PlayerWin == true) {
-                DrawText(&g_shader_program, font_texture_id, WinMsg, 30.0f, spacing, glm::vec3(0.0f, 0.0f, 0.0f));
-            }
-            else {
-                DrawText(&g_shader_program, font_texture_id, LoseMsg, 30.0f, spacing, glm::vec3(0.0f, 0.0f, 0.0f));
-            }
-        }
-
         delta_time -= FIXED_TIMESTEP;
     }
 
@@ -523,7 +517,17 @@ void render()
     g_game_state.player->render(&g_shader_program);
 
     for (int i = 0; i < PLATFORM_COUNT; i++) g_game_state.platforms[i].render(&g_shader_program);
-    for (int i = 0; i < ENEMY_COUNT; i++)    g_game_state.enemies[i].render(&g_shader_program);
+    for (int i = 0; i < ENEMY_COUNT; i++) {
+        if (g_game_state.enemies[i].get_is_active()) g_game_state.enemies[i].render(&g_shader_program);
+    }
+    if (GameOver) {
+        if (PlayerWin) {
+            DrawText(&g_shader_program, font_texture_id, WinMsg, 0.5f, 0.1f, glm::vec3(-3.0f, 0.0f, 0.0f));
+        }
+        else {
+            DrawText(&g_shader_program, font_texture_id, LoseMsg, 0.5f, 0.1f, glm::vec3(-3.0f, 0.0f, 0.0f));
+        }
+    }
     SDL_GL_SwapWindow(g_display_window);
 }
 
