@@ -1,7 +1,7 @@
 enum EntityType { PLATFORM, PLAYER, ENEMY   };
 enum AIType     { WALKER, GUARD, JUMPER     };
 enum AIState    { WALKING, IDLE, ATTACKING, JUMPING  };
-
+#include "Map.h"
 class Entity
 {
 private:
@@ -76,14 +76,15 @@ public:
     ~Entity();
 
     void draw_sprite_from_texture_atlas(ShaderProgram* program, GLuint texture_id, int index);
-    void update(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count);
+    void update(float delta_time, Entity* player, Map* gameMap);
     void render(ShaderProgram* program);
 
     bool const check_collision(Entity* other) const;
-    void const check_collision_y(Entity* collidable_entities, int collidable_entity_count);
-    void const check_collision_x(Entity* collidable_entities, int collidable_entity_count);
+    void const check_collision_y(Map* gameMap);
+    void const check_collision_x(Map* gameMap);
     bool const check_collision_x_player(Entity* other);
     bool const check_collision_y_player(Entity* other);
+    bool const isGrounded(Map* gameMap);
 
     void move_left() { m_movement.x = -1.0f; };
     void move_right() { m_movement.x = 1.0f; };
@@ -91,11 +92,11 @@ public:
     void move_down() { m_movement.y = -1.0f; };
 
     void ai_activate(Entity* player);
-    void ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count);
+    void ai_activate_jumper(float delta_time, Map* gameMap);
     void ai_deactivate(Entity* player);
     void ai_walk();
     void ai_guard(Entity* player);
-    void ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int colliable_entity_count);
+    void ai_jumper(float delta_time,Map* gameMap);
 
     void activate() { m_is_active = true; };
     void deactivate() { m_is_active = false; };

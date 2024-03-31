@@ -21,6 +21,7 @@
 #include <ctime>
 #include <vector>
 #include "Entity.h"
+#include "Map.h"
 
 // ––––– STRUCTS AND ENUMS ––––– //
 struct GameState
@@ -56,7 +57,15 @@ const char  SPRITESHEET_FILEPATH[] = "assets/player.png",
             ENEMY_FILEPATH[] = "assets/slime.png",
             FONT_FILEPATH[] = "assets/font1.png";
 
-
+const int LEVEL_HEIGHT = 5;
+const int LEVEL_WIDTH = 15;
+unsigned int levelData[LEVEL_HEIGHT][LEVEL_WIDTH] = {
+    { 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0},
+    { 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0},
+    { 1, 0, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0, 0, 0},
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+    { 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1},
+};
 const char  BGM_FILEPATH[]          = "assets/audio/dooblydoo.mp3",
             BOUNCING_SFX_FILEPATH[] = "assets/audio/bounce.wav";
 
@@ -103,6 +112,8 @@ float spacing = 0.5f;
 // Audio
 Mix_Music* g_music;
 Mix_Chunk* g_bouncing_sfx;
+Map* gameMap = nullptr;
+unsigned int* flatLevelData = nullptr;
 
 // ———— GENERAL FUNCTIONS ———— //
 GLuint load_texture(const char* filepath)
@@ -229,9 +240,16 @@ void initialise()
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
 
+    flatLevelData = new unsigned int[LEVEL_WIDTH * LEVEL_HEIGHT];
+    for (int i = 0; i < LEVEL_HEIGHT; i++) {
+        for (int j = 0; j < LEVEL_WIDTH; j++) {
+            flatLevelData[i * LEVEL_WIDTH + j] = levelData[i][j];
+        }
+    }
+    gameMap = new Map(LEVEL_WIDTH, LEVEL_HEIGHT, flatLevelData, platform_texture_id, 1.0f, LEVEL_WIDTH, LEVEL_HEIGHT);
     g_game_state.platforms = new Entity[PLATFORM_COUNT];
 
-    g_game_state.platforms[PLATFORM_COUNT - 1].m_texture_id = platform_texture_id;
+    /*g_game_state.platforms[PLATFORM_COUNT - 1].m_texture_id = platform_texture_id;
     g_game_state.platforms[PLATFORM_COUNT - 1].set_position(glm::vec3(-3.5f, -2.35f, 0.0f));
     g_game_state.platforms[PLATFORM_COUNT - 1].set_width(0.4f);
     g_game_state.platforms[PLATFORM_COUNT - 1].update(0.0f, NULL, NULL, 0);
@@ -272,7 +290,7 @@ void initialise()
     g_game_state.platforms[PLATFORM_COUNT - 7].m_texture_id = platform_texture_id;
     g_game_state.platforms[PLATFORM_COUNT - 7].set_position(glm::vec3(2.0f, -2.5f, 0.0f));
     g_game_state.platforms[PLATFORM_COUNT - 7].set_width(1.0f);
-    g_game_state.platforms[PLATFORM_COUNT - 7].update(0.0f, NULL, NULL, 0);
+    g_game_state.platforms[PLATFORM_COUNT - 7].update(0.0f, NULL, NULL, 0);*/
 
     // ––––– PLAYER (GEORGE) ––––– //
     // Existing
@@ -461,7 +479,6 @@ void update()
     float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
-
     delta_time += g_time_accumulator;
 
     if (delta_time < FIXED_TIMESTEP)
@@ -493,11 +510,11 @@ void update()
             PlayerWin = true;
         }
         if (!GameOver) {
-            if (g_game_state.player->get_is_active()) g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT);
+            if (g_game_state.player->get_is_active()) g_game_state.player->update(FIXED_TIMESTEP, g_game_state.player, gameMap);
 
             for (int i = 0; i < ENEMY_COUNT; i++) {
                 if (g_game_state.enemies[i].get_is_active()) {
-                    g_game_state.enemies[i].update(FIXED_TIMESTEP, g_game_state.player, g_game_state.platforms, PLATFORM_COUNT);
+                    g_game_state.enemies[i].update(FIXED_TIMESTEP, g_game_state.player, gameMap);
                 }
                 //g_game_state.player->check_collision_x(g_game_state.enemies, 3);
                 //g_game_state.player->check_collision_y(g_game_state.enemies, 3);
@@ -512,6 +529,7 @@ void update()
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
+    gameMap->render(&g_shader_program);
     g_game_state.player->render(&g_shader_program);
 
     for (int i = 0; i < PLATFORM_COUNT; i++) g_game_state.platforms[i].render(&g_shader_program);
@@ -536,6 +554,8 @@ void shutdown()
     delete[] g_game_state.platforms;
     delete   g_game_state.player;
     delete[] g_game_state.enemies;
+    delete[] flatLevelData;
+    delete gameMap;
 }
 
 // ––––– GAME LOOP ––––– //
