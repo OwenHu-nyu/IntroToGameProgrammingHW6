@@ -83,7 +83,7 @@ const int   PLAY_ONCE   = 0,
 
 // ––––– GLOBAL VARIABLES ––––– //
 GameState g_game_state;
-
+GLuint font_texture_id;
 SDL_Window* g_display_window;
 bool g_game_is_running = true;
 
@@ -131,7 +131,7 @@ GLuint load_texture(const char* filepath)
 
     return textureID;
 }
-GLuint font_texture_id = load_texture(FONT_FILEPATH);
+
 void DrawText(ShaderProgram* program, GLuint font_texture_id, std::string text, float screen_size, float spacing, glm::vec3 position)
 {
     // Scale the size of the fontbank in the UV-plane
@@ -224,7 +224,7 @@ void initialise()
 
     glClearColor(BG_RED, BG_BLUE, BG_GREEN, BG_OPACITY);
 
-    GLuint font_texture_id = load_texture(FONT_FILEPATH);
+    font_texture_id = load_texture(FONT_FILEPATH);
 
     // ––––– PLATFORMS ––––– //
     GLuint platform_texture_id = load_texture(PLATFORM_FILEPATH);
@@ -458,7 +458,6 @@ void process_input()
 
 void update()
 {
-    GLuint font_texture_id = load_texture(FONT_FILEPATH);
     float ticks = (float)SDL_GetTicks() / MILLISECONDS_IN_SECOND;
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
@@ -513,7 +512,6 @@ void update()
 void render()
 {
     glClear(GL_COLOR_BUFFER_BIT);
-
     g_game_state.player->render(&g_shader_program);
 
     for (int i = 0; i < PLATFORM_COUNT; i++) g_game_state.platforms[i].render(&g_shader_program);
