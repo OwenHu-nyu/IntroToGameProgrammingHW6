@@ -365,7 +365,7 @@ void shutdown()
     
     // ————— DELETING LEVEL A DATA (i.e. map, character, enemies...) ————— //
     delete g_level_a;
-    //delete g_main_menu;
+    delete g_main_menu;
 }
 
 // ————— GAME LOOP ————— //
