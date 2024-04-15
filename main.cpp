@@ -7,6 +7,7 @@
 #define ENEMY_COUNT 3
 #define LEVEL_WIDTH 14
 #define LEVEL_HEIGHT 8
+#define LEVEL1_LEFT_EDGE = 1.0f
 
 unsigned int LEVEL_DATA[] =
 {
@@ -14,8 +15,8 @@ unsigned int LEVEL_DATA[] =
     3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
     3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    3, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1,
+    3, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 0, 1, 1,
+    3, 0, 0, 1, 1, 1, 1, 0, 0, 1, 1, 1, 1, 1,
     3, 1, 1, 1, 1, 1, 1, 1, 1, 2, 2, 2, 2, 2,
     3, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2, 2
 };
@@ -230,7 +231,7 @@ void initialise()
     g_shader_program.load(V_SHADER_PATH, F_SHADER_PATH);
 
     g_view_matrix = glm::mat4(1.0f);
-    g_projection_matrix = glm::ortho(-5.0f, 5.0f, -3.75f, 3.75f, -1.0f, 1.0f);
+    g_projection_matrix = glm::ortho(0.0f, 5.0f, -8.0f, 8.0f, -1.0f, 1.0f);
 
     g_shader_program.set_projection_matrix(g_projection_matrix);
     g_shader_program.set_view_matrix(g_view_matrix);
@@ -292,7 +293,7 @@ void initialise()
     // ––––– PLAYER (GEORGE) ––––– //
     // Existing
     g_game_state.player = new Entity();
-    g_game_state.player->set_position(glm::vec3(-3.5f, 2.0f, 0.0f));
+    g_game_state.player->set_position(glm::vec3(1.0f, 2.0f, 0.0f));
     g_game_state.player->set_movement(glm::vec3(0.0f));
     g_game_state.player->set_speed(1.0f);
     g_game_state.player->set_acceleration(glm::vec3(0.0f, -4.905f, 0.0f));
@@ -324,7 +325,7 @@ void initialise()
     g_game_state.enemies[0].set_ai_type(WALKER);
     g_game_state.enemies[0].set_ai_state(IDLE);
     g_game_state.enemies[0].m_texture_id = enemy_texture_id;
-    g_game_state.enemies[0].set_position(glm::vec3(-0.3f, 0.0f, 0.0f));
+    g_game_state.enemies[0].set_position(glm::vec3(4.2f, 0.0f, 0.0f));
     g_game_state.enemies[0].set_movement(glm::vec3(0.0f));
     g_game_state.enemies[0].set_speed(0.45f);
     g_game_state.enemies[0].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
@@ -348,7 +349,7 @@ void initialise()
     g_game_state.enemies[1].set_ai_type(JUMPER);
     g_game_state.enemies[1].set_ai_state(IDLE);
     g_game_state.enemies[1].m_texture_id = enemy_texture_id;
-    g_game_state.enemies[1].set_position(glm::vec3(1.5f, 0.0f, 0.0f));
+    g_game_state.enemies[1].set_position(glm::vec3(4.5f, 0.0f, 0.0f));
     g_game_state.enemies[1].set_movement(glm::vec3(0.0f));
     g_game_state.enemies[1].set_speed(0.45f);
     g_game_state.enemies[1].set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
@@ -365,7 +366,7 @@ void initialise()
     g_game_state.enemies[1].m_animation_cols = 7;
     g_game_state.enemies[1].m_animation_rows = 5;
     g_game_state.enemies[1].set_height(0.5f);
-    g_game_state.enemies[1].set_width(0.65f);
+    g_game_state.enemies[1].set_width(0.4);
 
     g_game_state.enemies[2].set_entity_type(ENEMY);
     g_game_state.enemies[2].set_ai_type(GUARD);
@@ -387,7 +388,7 @@ void initialise()
     g_game_state.enemies[2].m_animation_cols = 7;
     g_game_state.enemies[2].m_animation_rows = 5;
     g_game_state.enemies[2].set_height(0.5f);
-    g_game_state.enemies[2].set_width(0.65f);
+    g_game_state.enemies[2].set_width(0.4f);
 
     // ––––– AUDIO STUFF ––––– //
     Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
@@ -523,6 +524,15 @@ void update()
     }
 
     g_time_accumulator = delta_time;
+
+    g_view_matrix = glm::mat4(1.0f);
+
+    if (g_game_state.player->get_position().x > 1.5f) {
+        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_game_state.player->get_position().x, 3.75, 0));
+    }
+    else {
+        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-5, 3.75, 0));
+    }
 }
 
 void render()
@@ -537,10 +547,10 @@ void render()
     }
     if (GameOver) {
         if (PlayerWin) {
-            DrawText(&g_shader_program, font_texture_id, WinMsg, 0.5f, 0.1f, glm::vec3(-3.0f, 0.0f, 0.0f));
+            DrawText(&g_shader_program, font_texture_id, WinMsg, 0.5f, 0.05f, glm::vec3(1.0f, 0.0f, 0.0f));
         }
         else {
-            DrawText(&g_shader_program, font_texture_id, LoseMsg, 0.5f, 0.1f, glm::vec3(-3.0f, 0.0f, 0.0f));
+            DrawText(&g_shader_program, font_texture_id, LoseMsg, 0.5f, 0.05f, glm::vec3(1.0f, 0.0f, 0.0f));
         }
     }
     SDL_GL_SwapWindow(g_display_window);

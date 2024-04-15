@@ -95,11 +95,11 @@ public:
     void move_down() { m_movement.y = -1.0f; };
 
     void ai_activate(Entity* player);
-    void ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count);
+    void ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map* map);
     void ai_deactivate(Entity* player);
     void ai_walk();
     void ai_guard(Entity* player);
-    void ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int colliable_entity_count);
+    void ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int colliable_entity_count, Map* map);
 
     void activate() { m_is_active = true; };
     void deactivate() { m_is_active = false; };

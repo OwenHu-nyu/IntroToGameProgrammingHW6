@@ -91,12 +91,12 @@ void Entity::ai_activate(Entity* player)
     }
 }
 
-void Entity::ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count)
+void Entity::ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map* map)
 {
     switch (m_ai_type)
     {
     case JUMPER:
-        ai_jumper(delta_time, player, collidable_entities, collidable_entity_count);
+        ai_jumper(delta_time, player, collidable_entities, collidable_entity_count, map);
     default:
         break;
     }
@@ -137,17 +137,18 @@ void Entity::ai_guard(Entity* player)
     }
 }
 
-void Entity::ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count)
+void Entity::ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count, Map* map)
 {
     m_velocity.x = m_movement.x * m_speed;
     m_velocity += m_acceleration * delta_time;
 
     m_position.y += m_velocity.y * delta_time;
     check_collision_y(collidable_entities, collidable_entity_count);
+    check_collision_y(map);
 
     m_position.x += m_velocity.x * delta_time;
     check_collision_x(collidable_entities, collidable_entity_count);
-
+    check_collision_x(map);
     if (m_collided_bottom) {
         m_is_jumping = true;
     }
@@ -168,14 +169,24 @@ void Entity::ai_jumper(float delta_time, Entity* player, Entity* collidable_enti
 
 void Entity::update(float delta_time, Entity* player, Entity* objects, int object_count, Map* map)
 {
-    if (!m_is_active) return;
+    if (!m_is_active) {
+        glDeleteTextures(1, &m_texture_id);
+        return;
+    }
 
     m_collided_top = false;
     m_collided_bottom = false;
     m_collided_left = false;
     m_collided_right = false;
 
-    if (m_entity_type == ENEMY) ai_activate(player);
+    if (m_entity_type == ENEMY) {
+        if (m_ai_type == GUARD or m_ai_type == WALKER) {
+            ai_activate(player);
+        }
+        else if (m_ai_type == JUMPER) {
+            ai_activate_jumper(delta_time, player, objects, object_count, map);
+        }
+    }
 
     if (m_animation_indices != NULL)
     {
