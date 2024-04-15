@@ -12,6 +12,7 @@
 #include "glm/gtc/matrix_transform.hpp"
 #include "ShaderProgram.h"
 #include "Entity.h"
+#include "Map.h"
 
 Entity::Entity()
 {
@@ -90,9 +91,26 @@ void Entity::ai_activate(Entity* player)
     }
 }
 
+void Entity::ai_activate_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count)
+{
+    switch (m_ai_type)
+    {
+    case JUMPER:
+        ai_jumper(delta_time, player, collidable_entities, collidable_entity_count);
+    default:
+        break;
+    }
+}
+
+
+void Entity::ai_deactivate(Entity* player) {
+    m_is_active = false;
+}
+
 void Entity::ai_walk()
 {
     m_movement = glm::vec3(-1.0f, 0.0f, 0.0f);
+
 }
 
 void Entity::ai_guard(Entity* player)
@@ -119,6 +137,34 @@ void Entity::ai_guard(Entity* player)
     }
 }
 
+void Entity::ai_jumper(float delta_time, Entity* player, Entity* collidable_entities, int collidable_entity_count)
+{
+    m_velocity.x = m_movement.x * m_speed;
+    m_velocity += m_acceleration * delta_time;
+
+    m_position.y += m_velocity.y * delta_time;
+    check_collision_y(collidable_entities, collidable_entity_count);
+
+    m_position.x += m_velocity.x * delta_time;
+    check_collision_x(collidable_entities, collidable_entity_count);
+
+    if (m_collided_bottom) {
+        m_is_jumping = true;
+    }
+    // ––––– JUMPING ––––– //
+    if (m_is_jumping)
+    {
+        // STEP 1: Immediately return the flag to its original false state
+        m_is_jumping = false;
+
+        // STEP 2: The player now acquires an upward velocity
+        m_velocity.y += m_jumping_power;
+    }
+
+    // ––––– TRANSFORMATIONS ––––– //
+    m_model_matrix = glm::mat4(1.0f);
+    m_model_matrix = glm::translate(m_model_matrix, m_position);
+}
 
 void Entity::update(float delta_time, Entity* player, Entity* objects, int object_count, Map* map)
 {
@@ -223,6 +269,85 @@ void const Entity::check_collision_x(Entity* collidable_entities, int collidable
     }
 }
 
+bool const Entity::check_collision_x_player(Entity* other)
+{
+    if (check_collision(other))
+    {
+        float x_distance = fabs(m_position.x - other->get_position().x);
+        float x_overlap = fabs(x_distance - (m_width / 2.0f) - (other->get_width() / 2.0f));
+        if (m_velocity.x > 0) {
+            std::cout << "Collided!\n";
+            return true;
+        }
+        else if (m_velocity.x < 0) {
+            std::cout << "Collided!\n";
+            return true;
+        }
+    }
+    return false;
+}
+
+bool const Entity::check_collision_y_player(Entity* other)
+{
+    if (check_collision(other))
+    {
+        float y_distance = fabs(m_position.y - other->get_position().y);
+        float y_overlap = fabs(y_distance - (m_height / 2.0f) - (other->get_height() / 2.0f));
+        if (m_velocity.y > 0) {
+            m_position.y -= y_overlap;
+            m_velocity.y = 0;
+            return true;
+        }
+        else if (m_velocity.y < 0) {
+            m_position.y += y_overlap;
+            m_velocity.y = 0;
+            return true;
+        }
+    }
+    return false;
+}
+void Entity::render(ShaderProgram* program)
+{
+    /*if (get_ai_type() == ENEMY) {
+        scale(glm::vec3(2.0f, 2.0f, 0.0f));
+    }*/
+    program->set_model_matrix(m_model_matrix);
+
+    if (m_animation_indices != NULL)
+    {
+        draw_sprite_from_texture_atlas(program, m_texture_id, m_animation_indices[m_animation_index]);
+        return;
+    }
+    /*if (get_entity_type() == ENEMY) {
+        scale(glm::vec3(2.0f, 2.0f, 0.0f));
+    }*/
+    float vertices[] = { -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5 };
+    float tex_coords[] = { 0.0,  1.0, 1.0,  1.0, 1.0, 0.0,  0.0,  1.0, 1.0, 0.0,  0.0, 0.0 };
+
+    glBindTexture(GL_TEXTURE_2D, m_texture_id);
+
+    glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0, vertices);
+    glEnableVertexAttribArray(program->get_position_attribute());
+    glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, tex_coords);
+    glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
+
+    glDrawArrays(GL_TRIANGLES, 0, 6);
+
+    glDisableVertexAttribArray(program->get_position_attribute());
+    glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
+}
+
+bool const Entity::check_collision(Entity* other) const
+{
+    if (other == this) return false;
+    // If either entity is inactive, there shouldn't be any collision
+    if (!m_is_active || !other->m_is_active) return false;
+
+    float x_distance = fabs(m_position.x - other->m_position.x) - ((m_width + other->m_width) / 2.0f);
+    float y_distance = fabs(m_position.y - other->m_position.y) - ((m_height + other->m_height) / 2.0f);
+
+    return x_distance < 0.0f && y_distance < 0.0f;
+}
 
 void const Entity::check_collision_y(Map* map)
 {
@@ -300,51 +425,7 @@ void const Entity::check_collision_x(Map* map)
     {
         m_position.x -= penetration_x;
         m_velocity.x = -m_velocity.x;
-        
+
         m_collided_right = true;
     }
-}
-
-
-
-void Entity::render(ShaderProgram* program)
-{
-    if (get_ai_type() == ENEMY) {
-        m_model_matrix = glm::scale(m_model_matrix, glm::vec3(-1.0f, 1.0f, 1.0f));
-    }
-    program->set_model_matrix(m_model_matrix);
-
-    if (m_animation_indices != NULL)
-    {
-        draw_sprite_from_texture_atlas(program, m_texture_id, m_animation_indices[m_animation_index]);
-        return;
-    }
-
-    float vertices[] = { -0.5, -0.5, 0.5, -0.5, 0.5, 0.5, -0.5, -0.5, 0.5, 0.5, -0.5, 0.5 };
-    float tex_coords[] = { 0.0,  1.0, 1.0,  1.0, 1.0, 0.0,  0.0,  1.0, 1.0, 0.0,  0.0, 0.0 };
-
-    glBindTexture(GL_TEXTURE_2D, m_texture_id);
-
-    glVertexAttribPointer(program->get_position_attribute(), 2, GL_FLOAT, false, 0, vertices);
-    glEnableVertexAttribArray(program->get_position_attribute());
-    glVertexAttribPointer(program->get_tex_coordinate_attribute(), 2, GL_FLOAT, false, 0, tex_coords);
-    glEnableVertexAttribArray(program->get_tex_coordinate_attribute());
-
-    glDrawArrays(GL_TRIANGLES, 0, 6);
-
-    glDisableVertexAttribArray(program->get_position_attribute());
-    glDisableVertexAttribArray(program->get_tex_coordinate_attribute());
-}
-
-
-bool const Entity::check_collision(Entity* other) const
-{
-    if (other == this) return false;
-    // If either entity is inactive, there shouldn't be any collision
-    if (!m_is_active || !other->m_is_active) return false;
-
-    float x_distance = fabs(m_position.x - other->m_position.x) - ((m_width + other->m_width) / 2.0f);
-    float y_distance = fabs(m_position.y - other->m_position.y) - ((m_height + other->m_height) / 2.0f);
-
-    return x_distance < 0.0f && y_distance < 0.0f;
 }
