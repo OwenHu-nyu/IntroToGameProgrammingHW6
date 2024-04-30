@@ -100,26 +100,26 @@ void LevelB::initialise()
     m_state.player = new Entity();
     m_state.player->set_entity_type(PLAYER);
     m_state.player->set_position(glm::vec3(5.0f, 0.0f, 0.0f));
-    m_state.player->set_velocity(glm::vec3(0.0f, 0.0f, 0.0f));
-    m_state.player->set_movement(glm::vec3(-1.0f, 0.0f, 0.0f));
+    m_state.player->set_velocity(glm::vec3(0.0f, -1.0f, 0.0f));
+    m_state.player->set_movement(glm::vec3(0.0f, 0.0f, 0.0f));
     m_state.player->m_texture_id = Utility::load_texture("assets/player.png");
     m_state.player->set_height(1.0f);
 
     /**
      Enemies' stuff */
     GLuint enemy_texture_id = Utility::load_texture("assets/slime.png");
-    glm::vec3 new_note_position = glm::vec3(2.5f, 0.0f, 0.0f);
+    glm::vec3 new_note_position = glm::vec3(5.0f, -1.5f, 0.0f);
     m_state.enemies = new Entity[ENEMY_COUNT];
     for (int i = 0; i < ENEMY_COUNT; i++) {
         m_state.enemies[i].set_entity_type(ENEMY);
-        m_state.enemies[i].set_ai_type(NOTE); // set to Note
+        m_state.enemies[i].set_ai_type(GUARD); // set to Note
         m_state.enemies[i].set_ai_state(IDLE);
         m_state.enemies[i].m_texture_id = enemy_texture_id;
         m_state.enemies[i].set_height(0.6f);
         m_state.enemies[i].set_width(0.6f);
         m_state.enemies[i].set_position(new_note_position);
         m_state.enemies[i].set_jumping_power(0.4f);
-        new_note_position += 1.5;
+        new_note_position.y -= 1.5f;
     }
     /**
      BGM and SFX

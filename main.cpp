@@ -360,37 +360,37 @@ void update()
 
     while (delta_time >= FIXED_TIMESTEP) {
         // ————— UPDATING THE SCENE (i.e. map, character, enemies...) ————— //
-        float y_distance = (float)(g_current_scene->m_state.enemies[curr_note].get_position().y - g_current_scene->m_state.player->get_position().y);
-        switch (difficulty)
-        {
-        case 0:
-            if (curr_note % 10 == 5) {
-                g_current_scene->m_state.enemies[curr_note].set_isRotating();
-            }
-        }
-        if (!g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
-            if (y_distance <= 1.0) {
-                g_current_scene->m_state.enemies[curr_note].set_isClickable();
-            }
-        }
-        else {
-            if (y_distance < -1.0) {
-                g_current_scene->m_state.enemies[curr_note].set_notClickable();
-                if (!was_note_clicked) {
-                    notes_missed++;
-                    g_current_scene->m_state.enemies[curr_note].deactivate(); // remove if deactivate doesn't work properly
-                    curr_note++;
-                }
-            }
-        }
-        if (notes_missed == 10) {
-            GameOver = true;
-        }
-        for (int i = 0; i < 3; i++) {
+        //float y_distance = (float)(g_current_scene->m_state.enemies[curr_note].get_position().y - g_current_scene->m_state.player->get_position().y);
+        //switch (difficulty)
+        //{
+        //case 0:
+        //    if (curr_note % 10 == 5) {
+        //        g_current_scene->m_state.enemies[curr_note].set_isRotating();
+        //    }
+        //}
+        //if (!g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+        //    if (y_distance <= 1.0) {
+        //        g_current_scene->m_state.enemies[curr_note].set_isClickable();
+        //    }
+        //}
+        //else {
+        //    if (y_distance < -1.0) {
+        //        g_current_scene->m_state.enemies[curr_note].set_notClickable();
+        //        if (!was_note_clicked) {
+        //            notes_missed++;
+        //            g_current_scene->m_state.enemies[curr_note].deactivate(); // remove if deactivate doesn't work properly
+        //            curr_note++;
+        //        }
+        //    }
+        //}
+        //if (notes_missed == 10) {
+        //    GameOver = true;
+        //}
+        /*for (int i = 0; i < 3; i++) {
             if (g_current_scene->m_state.player->check_collision(&g_current_scene->m_state.enemies[i]) == true) {
                 lives -= 1;
             }
-        }
+        }*/
         if (lives == 0) {
             GameOver = true;
         }
@@ -415,7 +415,12 @@ void update()
         }
     }
     else {
-        g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-5, 3.75, 0));
+        if (g_current_scene == g_main_menu) {
+            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(5, 3.75, 0));
+        }
+        else {
+            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->m_state.player->get_position().x, -g_current_scene->m_state.player->get_position().y, 0));
+        }
     }
 
     if (g_current_scene->m_state.player->get_position().x >= LEVEL_RIGHT_EDGE) {
