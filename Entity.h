@@ -1,6 +1,6 @@
 #include "Map.h"
 
-enum EntityType { PLATFORM, PLAYER, ENEMY};
+enum EntityType { PLATFORM, PLAYER, ENEMY };
 enum AIType { WALKER, GUARD, NOTE };
 enum AIState { WALKING, IDLE, ATTACKING };
 
@@ -131,4 +131,5 @@ public:
     void const set_notClickable() { isClickable = false; };
     void const set_isClickable() { isClickable = true; };
     void const set_isRotating() { isRotating = true; };
+    void const setDirection(std::string new_direction) { direction = new_direction; };
 };

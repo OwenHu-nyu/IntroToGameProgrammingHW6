@@ -262,53 +262,53 @@ void process_input()
                 }
                 break;
 
-            /*case SDLK_1:
-                if (g_current_scene == g_main_menu) {
-                    difficulty = 0;
-                    switch_to_scene(g_level_1);
-                }
-                break;
-
-            case SDLK_2:
-                if (g_current_scene == g_main_menu) {
-                    difficulty = 1;
-                    switch_to_scene(g_level_2);
-                }
-                break;
-
-            case SDLK_3:
-                if (g_current_scene == g_main_menu) {
-                    difficulty = 2;
-                    switch_to_scene(g_level_3);
-                }
-                break;*/
-
-            /*case SDLK_LEFT:
-                if (g_current_scene != g_main_menu) {
-                    if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
-                        if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Left") {
-                            float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
-                            if (y_distance <= 0.25f) {
-                                num_points += 10;
-                            }
-                            else if (y_distance <= 0.5f) {
-                                num_points += 5;
-                            }
-                            else if (y_distance <= 0.75) {
-                                num_points += 1;
-                            }
-                            else {
-                                notes_missed++;
-                            }
-                        }
-                        else {
-                            notes_missed++;
-                        }
-                        g_current_scene->m_state.enemies[curr_note].set_notClickable();
-                        g_current_scene->m_state.enemies[curr_note].deactivate();
-                        was_note_clicked = true;
+                /*case SDLK_1:
+                    if (g_current_scene == g_main_menu) {
+                        difficulty = 0;
+                        switch_to_scene(g_level_1);
                     }
-                }*/
+                    break;
+
+                case SDLK_2:
+                    if (g_current_scene == g_main_menu) {
+                        difficulty = 1;
+                        switch_to_scene(g_level_2);
+                    }
+                    break;
+
+                case SDLK_3:
+                    if (g_current_scene == g_main_menu) {
+                        difficulty = 2;
+                        switch_to_scene(g_level_3);
+                    }
+                    break;*/
+
+                    /*case SDLK_LEFT:
+                        if (g_current_scene != g_main_menu) {
+                            if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+                                if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Left") {
+                                    float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
+                                    if (y_distance <= 0.25f) {
+                                        num_points += 10;
+                                    }
+                                    else if (y_distance <= 0.5f) {
+                                        num_points += 5;
+                                    }
+                                    else if (y_distance <= 0.75) {
+                                        num_points += 1;
+                                    }
+                                    else {
+                                        notes_missed++;
+                                    }
+                                }
+                                else {
+                                    notes_missed++;
+                                }
+                                g_current_scene->m_state.enemies[curr_note].set_notClickable();
+                                g_current_scene->m_state.enemies[curr_note].deactivate();
+                                was_note_clicked = true;
+                            }
+                        }*/
             default:
                 break;
             }
@@ -347,7 +347,7 @@ void update()
     float delta_time = ticks - g_previous_ticks;
     g_previous_ticks = ticks;
     // below for full length of song
-    /*if (ticks > max_ticks) { 
+    /*if (ticks > max_ticks) {
         GameOver = true;
     }*/
     delta_time += g_accumulator;
@@ -435,7 +435,7 @@ void render()
     g_shader_program.set_view_matrix(g_view_matrix);
     glClear(GL_COLOR_BUFFER_BIT);
     if (g_current_scene == g_main_menu) {
-        DrawText(&g_shader_program, font_texture_id, MenuMsg, 0.5f, 0.05f, glm::vec3(3.0f, -1.0f, 0.0f));
+        DrawText(&g_shader_program, font_texture_id, MenuMsg, 0.5f, 0.05f, glm::vec3(3.0f, 1.0f, 0.0f));
     }
     if (!GameOver && g_current_scene != g_main_menu) {
         DrawText(&g_shader_program, font_texture_id, Level1, 0.5f, 0.05f, glm::vec3(3.0f, -1.0f, 0.0f));

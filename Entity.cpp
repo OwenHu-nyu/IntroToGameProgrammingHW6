@@ -314,7 +314,7 @@ void const Entity::check_collision_x(Map* map)
 void Entity::render(ShaderProgram* program)
 {
     if (get_ai_type() == ENEMY) {
-        m_model_matrix = glm::scale(m_model_matrix, glm::vec3(-1.0f, 1.0f, 1.0f));
+        m_model_matrix = glm::scale(m_model_matrix, glm::vec3(0.5f, 0.5f, 0.0f));
     }
     program->set_model_matrix(m_model_matrix);
 
