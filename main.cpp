@@ -25,6 +25,8 @@
 #include "MainMenu.h"
 #include "LevelA.h"
 #include "LevelB.h"
+#include "LevelC.h"
+#include "LevelD.h"
 #include "stb_image.h"
 
 // ————— CONSTANTS ————— //
@@ -52,7 +54,8 @@ Scene* g_current_scene;
 MainMenu* g_main_menu;
 LevelA* g_level_a;
 LevelB* g_level_1;
-
+LevelC* g_level_2;
+LevelD* g_level_3;
 SDL_Window* g_display_window;
 bool g_game_is_running = true;
 
@@ -73,12 +76,13 @@ const GLint LEVEL_OF_DETAIL = 0;
 const GLint TEXTURE_BORDER = 0;
 const int FONTBANK_SIZE = 16;
 GLuint font_texture_id;
-std::string MenuMsg = "Press Enter to Start";
+std::string MenuMsg = "Press 1, 2 or 3";
 std::string WinMsg = "You Win!";
 std::string LoseMsg = "You Lose!";
 std::string Level1 = "Level 1";
 std::string Level2 = "Level 2";
 std::string Level3 = "Level 3";
+//std::string PointsMsg = "Points: " + std::to_string(num_points);
 int difficulty;
 float spacing = 0.1f;
 bool GameOver = false;
@@ -216,6 +220,8 @@ void initialise()
 
     g_level_a = new LevelA();
     g_level_1 = new LevelB();
+    g_level_2 = new LevelC();
+    g_level_3 = new LevelD();
     //switch_to_scene(g_level_a);
     GLuint font_texture_id = load_texture(FONT_FILEPATH);
     // ————— BLENDING ————— //
@@ -245,29 +251,12 @@ void process_input()
                 g_game_is_running = false;
                 break;
 
-            case SDLK_SPACE:
-                // Jump
-                if (g_current_scene->m_state.player->m_collided_bottom)
-                {
-                    g_current_scene->m_state.player->m_is_jumping = true;
-                    //Mix_VolumeChunk(g_current_scene->m_state.jump_sfx, MIX_MAX_VOLUME / 2);
-                    Mix_PlayChannel(-1, g_current_scene->m_state.jump_sfx, 0);
-                }
-                break;
-
-            case SDLK_RETURN:
-                // Switch to level A
+            case SDLK_1:
                 if (g_current_scene == g_main_menu) {
+                    difficulty = 0;
                     switch_to_scene(g_level_1);
                 }
                 break;
-
-                /*case SDLK_1:
-                    if (g_current_scene == g_main_menu) {
-                        difficulty = 0;
-                        switch_to_scene(g_level_1);
-                    }
-                    break;
 
                 case SDLK_2:
                     if (g_current_scene == g_main_menu) {
@@ -281,34 +270,120 @@ void process_input()
                         difficulty = 2;
                         switch_to_scene(g_level_3);
                     }
-                    break;*/
-
-                    /*case SDLK_LEFT:
-                        if (g_current_scene != g_main_menu) {
-                            if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
-                                if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Left") {
-                                    float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
-                                    if (y_distance <= 0.25f) {
-                                        num_points += 10;
-                                    }
-                                    else if (y_distance <= 0.5f) {
-                                        num_points += 5;
-                                    }
-                                    else if (y_distance <= 0.75) {
-                                        num_points += 1;
-                                    }
-                                    else {
-                                        notes_missed++;
-                                    }
-                                }
-                                else {
-                                    notes_missed++;
-                                }
-                                g_current_scene->m_state.enemies[curr_note].set_notClickable();
-                                g_current_scene->m_state.enemies[curr_note].deactivate();
-                                was_note_clicked = true;
+                    break;
+            case SDLK_LEFT:
+                if (g_current_scene != g_main_menu) {
+                    if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+                        if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Left") {
+                            float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
+                            if (y_distance <= 0.125f) {
+                                num_points += 10;
                             }
-                        }*/
+                            else if (y_distance <= 0.25f) {
+                                num_points += 5;
+                            }
+                            else if (y_distance <= 0.375) {
+                                num_points += 1;
+                            }
+                            else {
+                                notes_missed++;
+                            }
+                        }
+                        else {
+                            notes_missed++;
+                        }
+                        g_current_scene->m_state.enemies[curr_note].set_notClickable();
+                        g_current_scene->m_state.enemies[curr_note].deactivate();
+                        was_note_clicked = true;
+                        curr_note++;
+                    }
+                }
+                break;
+            case SDLK_RIGHT:
+                if (g_current_scene != g_main_menu) {
+                    if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+                        if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Right") {
+                            float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
+                            if (y_distance <= 0.125f) {
+                                num_points += 10;
+                            }
+                            else if (y_distance <= 0.25f) {
+                                num_points += 5;
+                            }
+                            else if (y_distance <= 0.375) {
+                                num_points += 1;
+                            }
+                            else {
+                                notes_missed++;
+                            }
+                        }
+                        else {
+                            notes_missed++;
+                        }
+                        g_current_scene->m_state.enemies[curr_note].set_notClickable();
+                        g_current_scene->m_state.enemies[curr_note].deactivate();
+                        was_note_clicked = true;
+                        curr_note++;
+                    }
+                }
+                break;
+            case SDLK_UP:
+                if (g_current_scene != g_main_menu) {
+                    if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+                        if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Up") {
+                            float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
+                            if (y_distance <= 0.125f) {
+                                num_points += 10;
+                            }
+                            else if (y_distance <= 0.25f) {
+                                num_points += 5;
+                            }
+                            else if (y_distance <= 0.375) {
+                                num_points += 1;
+                            }
+                            else {
+                                notes_missed++;
+                            }
+                        }
+                        else {
+                            notes_missed++;
+                        }
+                        g_current_scene->m_state.enemies[curr_note].set_notClickable();
+                        g_current_scene->m_state.enemies[curr_note].deactivate();
+                        was_note_clicked = true;
+                        curr_note++;
+                    }
+                }
+                break;
+            case SDLK_DOWN:
+                if (g_current_scene != g_main_menu) {
+                    if (g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+                        if (g_current_scene->m_state.enemies[curr_note].get_direction() == "Down") {
+                            float y_distance = fabs(g_current_scene->m_state.player->get_position().y - g_current_scene->m_state.enemies[curr_note].get_position().y);
+                            if (y_distance <= 0.125f) {
+                                num_points += 10;
+                            }
+                            else if (y_distance <= 0.25f) {
+                                num_points += 5;
+                            }
+                            else if (y_distance <= 0.375) {
+                                num_points += 1;
+                            }
+                            else {
+                                notes_missed++;
+                            }
+                        }
+                        else {
+                            notes_missed++;
+                        }
+                        g_current_scene->m_state.enemies[curr_note].set_notClickable();
+                        g_current_scene->m_state.enemies[curr_note].deactivate();
+                        was_note_clicked = true;
+                        curr_note++;
+                    }
+                }
+                break;
+                 
             default:
                 break;
             }
@@ -318,25 +393,25 @@ void process_input()
         }
     }
 
-    const Uint8* key_state = SDL_GetKeyboardState(NULL);
-    if (g_current_scene != g_main_menu) {
-        if (key_state[SDL_SCANCODE_LEFT])
-        {
-            g_current_scene->m_state.player->move_left();
-            g_current_scene->m_state.player->m_animation_indices = g_current_scene->m_state.player->m_walking[g_current_scene->m_state.player->LEFT];
-        }
-        else if (key_state[SDL_SCANCODE_RIGHT])
-        {
-            g_current_scene->m_state.player->move_right();
-            g_current_scene->m_state.player->m_animation_indices = g_current_scene->m_state.player->m_walking[g_current_scene->m_state.player->RIGHT];
-        }
+    //const Uint8* key_state = SDL_GetKeyboardState(NULL);
+    //if (g_current_scene != g_main_menu) {
+    //    if (key_state[SDL_SCANCODE_LEFT])
+    //    {
+    //        g_current_scene->m_state.player->move_left();
+    //        g_current_scene->m_state.player->m_animation_indices = g_current_scene->m_state.player->m_walking[g_current_scene->m_state.player->LEFT];
+    //    }
+    //    else if (key_state[SDL_SCANCODE_RIGHT])
+    //    {
+    //        g_current_scene->m_state.player->move_right();
+    //        g_current_scene->m_state.player->m_animation_indices = g_current_scene->m_state.player->m_walking[g_current_scene->m_state.player->RIGHT];
+    //    }
 
-        // This makes sure that the player can't move faster diagonally
-        if (glm::length(g_current_scene->m_state.player->get_movement()) > 1.0f)
-        {
-            g_current_scene->m_state.player->set_movement(glm::normalize(g_current_scene->m_state.player->get_movement()));
-        }
-    }
+    //    // This makes sure that the player can't move faster diagonally
+    //    if (glm::length(g_current_scene->m_state.player->get_movement()) > 1.0f)
+    //    {
+    //        g_current_scene->m_state.player->set_movement(glm::normalize(g_current_scene->m_state.player->get_movement()));
+    //    }
+    //}
 }
 
 void update()
@@ -360,40 +435,58 @@ void update()
 
     while (delta_time >= FIXED_TIMESTEP) {
         // ————— UPDATING THE SCENE (i.e. map, character, enemies...) ————— //
-        //float y_distance = (float)(g_current_scene->m_state.enemies[curr_note].get_position().y - g_current_scene->m_state.player->get_position().y);
-        //switch (difficulty)
-        //{
-        //case 0:
-        //    if (curr_note % 10 == 5) {
-        //        g_current_scene->m_state.enemies[curr_note].set_isRotating();
-        //    }
-        //}
-        //if (!g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
-        //    if (y_distance <= 1.0) {
-        //        g_current_scene->m_state.enemies[curr_note].set_isClickable();
-        //    }
-        //}
-        //else {
-        //    if (y_distance < -1.0) {
-        //        g_current_scene->m_state.enemies[curr_note].set_notClickable();
-        //        if (!was_note_clicked) {
-        //            notes_missed++;
-        //            g_current_scene->m_state.enemies[curr_note].deactivate(); // remove if deactivate doesn't work properly
-        //            curr_note++;
-        //        }
-        //    }
-        //}
-        //if (notes_missed == 10) {
-        //    GameOver = true;
-        //}
+        float y_distance = (float)(g_current_scene->m_state.enemies[curr_note].get_position().y - g_current_scene->m_state.player->get_position().y);
+        switch (difficulty)
+        {
+        case 0:
+            if (curr_note % 10 == 5) {
+                g_current_scene->m_state.enemies[curr_note].set_isRotating();
+            }
+        }
+
+        if (!g_current_scene->m_state.enemies[curr_note].check_isClickable()) {
+            if (y_distance >= -0.5) {
+                g_current_scene->m_state.enemies[curr_note].set_isClickable();
+            }
+        }
+        if (y_distance > 0.4) {
+            g_current_scene->m_state.enemies[curr_note].set_notClickable();
+            if (!was_note_clicked) {
+                notes_missed++;
+                g_current_scene->m_state.enemies[curr_note].deactivate(); // remove if deactivate doesn't work properly
+                curr_note++;
+            }
+        }
+        was_note_clicked = false;
+        if (notes_missed == 10) {
+            GameOver = true;
+        }
+        if (g_current_scene == g_level_1) {
+            if (curr_note > g_level_1->getNoteCount() - 1) {
+                GameOver = true;
+                PlayerWin = true;
+            }
+        }
+        else if (g_current_scene == g_level_2) {
+            if (curr_note > g_level_2->getNoteCount() - 1) {
+                GameOver = true;
+                PlayerWin = true;
+            }
+        }
+        /*else if (g_current_scene == g_level_2) {
+            if (curr_note > g_level_2->getNoteCount()) {
+                GameOver = true;
+                PlayerWin = true;
+            }
+        }*/
         /*for (int i = 0; i < 3; i++) {
             if (g_current_scene->m_state.player->check_collision(&g_current_scene->m_state.enemies[i]) == true) {
                 lives -= 1;
             }
         }*/
-        if (lives == 0) {
+        /*if (lives == 0) {
             GameOver = true;
-        }
+        }*/
         if (!GameOver) {
             g_current_scene->update(FIXED_TIMESTEP);
         }
@@ -416,44 +509,40 @@ void update()
     }
     else {
         if (g_current_scene == g_main_menu) {
-            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(5, 3.75, 0));
+            g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-4.5, 3, 0));
         }
         else {
             g_view_matrix = glm::translate(g_view_matrix, glm::vec3(-g_current_scene->m_state.player->get_position().x, -g_current_scene->m_state.player->get_position().y, 0));
         }
     }
-
-    if (g_current_scene->m_state.player->get_position().x >= LEVEL_RIGHT_EDGE) {
-        GameOver = true;
-        PlayerWin = true;
-    }
 }
 
 void render()
-{
+{   
+    std::string PointsMsg = "Points: " + std::to_string(num_points);
     font_texture_id = load_texture(FONT_FILEPATH);
     g_shader_program.set_view_matrix(g_view_matrix);
     glClear(GL_COLOR_BUFFER_BIT);
+    float player_x_pos = g_current_scene->m_state.player->get_position().x + 1.0f;
+    float msg_spot_x = g_current_scene->m_state.player->get_position().x - 3;
+    float msg_spot_y = g_current_scene->m_state.player->get_position().y + 2;
     if (g_current_scene == g_main_menu) {
-        DrawText(&g_shader_program, font_texture_id, MenuMsg, 0.5f, 0.05f, glm::vec3(3.0f, 1.0f, 0.0f));
+        DrawText(&g_shader_program, font_texture_id, MenuMsg, 0.5f, 0.01f, glm::vec3(0.0f, 0.0f, 0.0f));
     }
     if (!GameOver && g_current_scene != g_main_menu) {
-        DrawText(&g_shader_program, font_texture_id, Level1, 0.5f, 0.05f, glm::vec3(3.0f, -1.0f, 0.0f));
+        //DrawText(&g_shader_program, font_texture_id, Level1, 0.5f, 0.05f, glm::vec3(3.0f, -1.0f, 0.0f));
+        DrawText(&g_shader_program, font_texture_id, PointsMsg, 0.5f, 0.05f, glm::vec3(msg_spot_x, msg_spot_y, 0.0f));
         //DrawText(&g_shader_program, font_texture_id, Level2, 0.5f, 0.1f, glm::vec3(13.0f, -1.0f, 0.0f));
         //DrawText(&g_shader_program, font_texture_id, Level3, 0.5f, 0.1f, glm::vec3(23.0f, -1.0f, 0.0f));
     }
-    /*if (g_current_scene == g_main_menu) {
-        DrawText(&g_shader_program, font_texture_id, MenuMsg, 0.5f, 0.1f, glm::vec3(3.0f, -5.0f, 0.0f));
-    }*/
     // ————— RENDERING THE SCENE (i.e. map, character, enemies...) ————— //
     g_current_scene->render(&g_shader_program);
-    float msg_spot = g_current_scene->m_state.player->get_position().x - 3;
     if (GameOver && g_current_scene != g_main_menu) {
         if (PlayerWin) {
-            DrawText(&g_shader_program, font_texture_id, WinMsg, 0.5f, 0.05f, glm::vec3(msg_spot, -1.0f, 0.0f));
+            DrawText(&g_shader_program, font_texture_id, WinMsg, 0.5f, 0.05f, glm::vec3(msg_spot_x, msg_spot_y, 0.0f));
         }
         else {
-            DrawText(&g_shader_program, font_texture_id, LoseMsg, 0.5f, 0.05f, glm::vec3(msg_spot, -1.0f, 0.0f));
+            DrawText(&g_shader_program, font_texture_id, LoseMsg, 0.5f, 0.05f, glm::vec3(msg_spot_x, msg_spot_y, 0.0f));
         }
     }
     SDL_GL_SwapWindow(g_display_window);
@@ -468,6 +557,7 @@ void shutdown()
     // delete g_level_2;
     // delete g_level_3;
     delete g_main_menu;
+    delete g_level_1;
 }
 
 // ————— GAME LOOP ————— //

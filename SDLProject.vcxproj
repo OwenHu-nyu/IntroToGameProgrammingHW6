@@ -141,6 +141,8 @@
     <ClCompile Include="helper.cpp" />
     <ClCompile Include="LevelB.cpp" />
     <ClCompile Include="LevelA.cpp" />
+    <ClCompile Include="LevelC.cpp" />
+    <ClCompile Include="LevelD.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="MainMenu.cpp" />
     <ClCompile Include="Map.cpp" />
@@ -152,6 +154,8 @@
     <ClInclude Include="Entity.h" />
     <ClInclude Include="LevelB.h" />
     <ClInclude Include="LevelA.h" />
+    <ClInclude Include="LevelC.h" />
+    <ClInclude Include="LevelD.h" />
     <ClInclude Include="MainMenu.h" />
     <ClInclude Include="Map.h" />
     <ClInclude Include="Scene.h" />

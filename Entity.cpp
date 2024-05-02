@@ -176,6 +176,10 @@ void Entity::update(float delta_time, Entity* player, Entity* objects, int objec
     }
 
     m_model_matrix = glm::mat4(1.0f);
+    /*if (isRotating) {
+        constexpr float angle = glm::radians(45.0f);
+        m_model_matrix = glm::rotate(m_model_matrix, angle, glm::vec3(1.0f, 0.0f, 0.0f));
+    }*/
     m_model_matrix = glm::translate(m_model_matrix, m_position);
 }
 
@@ -313,8 +317,12 @@ void const Entity::check_collision_x(Map* map)
 
 void Entity::render(ShaderProgram* program)
 {
-    if (get_ai_type() == ENEMY) {
+    if (get_ai_type() == NOTE) {
         m_model_matrix = glm::scale(m_model_matrix, glm::vec3(0.5f, 0.5f, 0.0f));
+    }
+    if (isRotating) {
+        constexpr float angle = glm::radians(45.0f);
+        m_model_matrix = glm::rotate(m_model_matrix, angle, glm::vec3(0.0f, 0.0f, 1.0f));
     }
     program->set_model_matrix(m_model_matrix);
 

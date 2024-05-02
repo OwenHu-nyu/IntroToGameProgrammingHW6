@@ -1,19 +1,19 @@
 #include "MainMenu.h"
 #include "Utility.h"
 
-#define LEVEL_WIDTH 14
+#define LEVEL_WIDTH 11
 #define LEVEL_HEIGHT 8
 
 unsigned int MAIN_MENU_DATA[] =
 {
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
-    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,
+    11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10,
+    15, 15, 15, 15, 15, 15, 15, 15, 15, 15, 15,
+    14, 14, 14, 14, 14, 14, 14, 14, 14, 14, 14,
+    11, 11, 11, 11, 11, 11, 11, 11, 11, 11, 11,
+    10, 10, 10, 10, 10, 10, 10, 10, 10, 10, 10
 };
 
 MainMenu::~MainMenu()
@@ -27,8 +27,8 @@ MainMenu::~MainMenu()
 
 void MainMenu::initialise()
 {
-    GLuint map_texture_id = Utility::load_texture("assets/tileset.png");
-    m_state.map = new Map(LEVEL_WIDTH, LEVEL_HEIGHT, MAIN_MENU_DATA, map_texture_id, 1.0f, 4, 1);
+    GLuint map_texture_id = Utility::load_texture("assets/mini-spritesheet-thumbnail.png");
+    m_state.map = new Map(LEVEL_WIDTH, LEVEL_HEIGHT, MAIN_MENU_DATA, map_texture_id, 1.0f, 4, 4);
 
     // Code from main.cpp's initialise()
     /**
@@ -37,7 +37,7 @@ void MainMenu::initialise()
      // Existing
     m_state.player = new Entity();
     m_state.player->set_entity_type(PLAYER);
-    m_state.player->set_position(glm::vec3(5.0f, 0.0f, 0.0f));
+    m_state.player->set_position(glm::vec3(0.0f, 5.0f, 0.0f));
     m_state.player->set_movement(glm::vec3(0.0f));
     m_state.player->set_speed(2.5f);
     //m_state.player->set_acceleration(glm::vec3(0.0f, -9.81f, 0.0f));
@@ -77,13 +77,6 @@ void MainMenu::initialise()
     /**
      BGM and SFX
      */
-    Mix_OpenAudio(44100, MIX_DEFAULT_FORMAT, 2, 4096);
-
-    m_state.bgm = Mix_LoadMUS("assets/dooblydoo.mp3");
-    Mix_PlayMusic(m_state.bgm, -1);
-    Mix_VolumeMusic(0.0f);
-
-    m_state.jump_sfx = Mix_LoadWAV("assets/bounce.wav");
 }
 
 void MainMenu::update(float delta_time)

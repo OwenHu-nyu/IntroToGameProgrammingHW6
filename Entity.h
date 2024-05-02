@@ -8,8 +8,6 @@ class Entity
 {
 private:
     bool m_is_active = true;
-    bool isClickable = false;
-    bool isRotating = false;
     // ––––– ANIMATION ––––– //
     int* m_animation_right = NULL, // move to the right
         * m_animation_left = NULL, // move to the left
@@ -34,8 +32,6 @@ private:
 
     float m_width = 1;
     float m_height = 1;
-
-    std::string direction;
 public:
     // ————— STATIC VARIABLES ————— //
     static const int    SECONDS_PER_FRAME = 4;
@@ -70,7 +66,9 @@ public:
     bool m_collided_bottom = false;
     bool m_collided_left = false;
     bool m_collided_right = false;
-
+    bool isClickable = false;
+    bool isRotating = false;
+    std::string direction;
     GLuint    m_texture_id;
 
     // ————— METHODS ————— //
